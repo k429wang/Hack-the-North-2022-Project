@@ -3,14 +3,11 @@ from play_translation_audio import play_translation_audio
 from screenshot_event import screenshot_event
 from translation_event import translation_event
 
-from PySide2 import QtCore, QtGui, QtWidgets
 import adhawkapi
 import adhawkapi.frontend
-from adhawkapi import MarkerSequenceMode, PacketType
-''' Demonstrates how to subscribe to and handle data from gaze and event streams '''
-import adhawkapi
-import adhawkapi.frontend
-from adhawkapi import Events, MarkerSequenceMode, PacketType
+from adhawkapi import MarkerSequenceMode, PacketType, Events
+
+import time
 
 
 class Frontend:
@@ -22,7 +19,11 @@ class Frontend:
 
         # Tell the api that we wish to tap into the GAZE data stream
         # with self._handle_gaze_data_stream as the handler
-        self._api.register_stream_handler(PacketType.GAZE, self._handle_gaze_data_stream)
+        # self._api.register_stream_handler(PacketType.GAZE, self._handle_gaze_data_stream)
+
+        # Tell the api that we wish to tap into the GAZE IN IMAGE data stream
+        # with self._handle_gaze_data_stream as the handler
+        self._api.register_stream_handler(PacketType.GAZE, self._handle_gaze_in_image_stream)
 
         # Tell the api that we wish to tap into the EVENTS stream
         # with self._handle_event_stream as the handler
@@ -37,6 +38,9 @@ class Frontend:
 
         # Used to limit the rate at which data is displayed in the console
         self._last_console_print = None
+
+        # Initialize the gaze coordinates to dummy values for now
+        self._gaze_coordinates = (0, 0, 0)
 
         # Flags the frontend as not connected yet
         self.connected = False
@@ -70,6 +74,24 @@ class Frontend:
                   f'Y coordinate:\t\t{y_pos}\n'
                   f'Z coordinate:\t\t{z_pos}\n'
                   f'Vergence angle:\t\t{vergence}\n')
+
+    def _handle_gaze_in_image_stream(self, timestamp, gaze_img_x, gaze_img_y, *_args):
+
+        # Updates the gaze marker coordinates with new gaze data. It is possible to receive NaN from the api, so we
+        # filter the input accordingly.
+        self._gaze_coordinates = [timestamp, gaze_img_x, gaze_img_y]
+
+        # Only log at most once per second
+        if self._last_console_print and timestamp < self._last_console_print + 1:
+            return
+
+
+        if self._allow_output:
+            self._last_console_print = timestamp
+            print(f'Gaze data\n'
+                  f'Time since connection:\t{timestamp}\n'
+                  f'X coordinate:\t\t{gaze_img_x}\n'
+                  f'Y coordinate:\t\t{gaze_img_y}\n')
 
     def _handle_event_stream(self, event_type, _timestamp, *_args):
         ''' Prints event data to the console '''
@@ -113,15 +135,32 @@ class Frontend:
         # Two calibration modes are supported: FIXED_HEAD and FIXED_GAZE
         # With fixed head mode you look at calibration markers without moving your head
         # With fixed gaze mode you keep looking at a central point and move your head as instructed during calibration.
-        self._api.start_calibration_gui(mode=MarkerSequenceMode.FIXED_HEAD, n_points=9, marker_size_mm=35,
-                                    randomize=False, callback=(lambda *_args: None))
+        self._api.start_calibration_gui(mode=MarkerSequenceMode.FIXED_HEAD, n_points=9, marker_size_mm=35, randomize=False, callback=(lambda *_args: None))
 
         self._allow_output = True
 
 def main():
     '''Main function'''
     frontend = Frontend()
-    frontend.calibrate()
+    try:
+        print('Plug in your MindLink and ensure AdHawk Backend is running.')
+        while not frontend.connected:
+            pass  # Waits for the frontend to be connected before proceeding
+
+        input('Press Enter to run a Calibration.')
+
+        # Runs a Quick Start at the user's command. This tunes the scan range and frequency to best suit the user's eye
+        # and face shape, resulting in better tracking data. For the best quality results in your application, you
+        # should also perform a calibration before using gaze data.
+        frontend.calibrate()
+
+        while True:
+            # Loops while the data streams come in
+            time.sleep(1)
+    except (KeyboardInterrupt, SystemExit):
+
+        # Allows the frontend to be shut down robustly on a keyboard interrupt
+        frontend.shutdown()
 
 if __name__ == '__main__':
     main()
