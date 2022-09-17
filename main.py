@@ -4,6 +4,11 @@ from eye_gestures_detection import detect_eye_gestures
 from play_translation_audio import play_translation_audio
 from screenshot_event import screenshot_event
 from translation_event import translation_event
+from calibration import calibrate
+
+import adhawkapi
+import adhawkapi.frontend
+from adhawkapi import MarkerSequenceMode, PacketType
 
 PLACEHOLDER = None
 
