@@ -34,13 +34,18 @@ class Frontend:
         self._api.start(connect_cb=self._handle_connect_response)
 
         # Disallows console output until a Quick Start has been run
-        self._allow_output = False
+        self._allow_output0 = False
+        self._allow_output1 = False
+
 
         # Used to limit the rate at which data is displayed in the console
         self._last_console_print = None
 
         # Initialize the gaze coordinates to dummy values for now
         self._gaze_coordinates = (0, 0, 0)
+
+        # Initialize blink duration to dummy values for now
+        self._blink_duration = 0
 
         # Flags the frontend as not connected yet
         self.connected = False
@@ -66,7 +71,7 @@ class Frontend:
             return
 
 
-        if self._allow_output:
+        if self._allow_output0 and self._allow_output1:
             self._last_console_print = timestamp
             print(f'Gaze data\n'
                   f'Time since connection:\t{timestamp}\n'
@@ -86,22 +91,23 @@ class Frontend:
             return
 
 
-        if self._allow_output:
+        if self._allow_output0 and self._allow_output1:
             self._last_console_print = timestamp
             print(f'Gaze data\n'
                   f'Time since connection:\t{timestamp}\n'
                   f'X coordinate:\t\t{gaze_img_x}\n'
                   f'Y coordinate:\t\t{gaze_img_y}\n')
 
-    def _handle_event_stream(self, event_type, _timestamp, *_args):
+    def _handle_event_stream(self, event_type, _timestamp, *args):
         ''' Prints event data to the console '''
-        if self._allow_output:
-
+        if self._allow_output0 and self._allow_output1:
             # We discriminate between events based on their type
             if event_type == Events.BLINK.value:
-                print('Blink!')
+                self._blink_duration = args[0]
+                #print('Blink!')
             elif event_type == Events.SACCADE.value:
-                print('Saccade!')
+                print('')
+                #print('Saccade!')
 
     def _handle_connect_response(self, error):
         ''' Handler for backend connections '''
@@ -137,7 +143,26 @@ class Frontend:
         # With fixed gaze mode you keep looking at a central point and move your head as instructed during calibration.
         self._api.start_calibration_gui(mode=MarkerSequenceMode.FIXED_HEAD, n_points=9, marker_size_mm=35, randomize=False, callback=(lambda *_args: None))
 
-        self._allow_output = True
+        self._allow_output0 = True
+        print("calibrate!")
+
+
+    def quickstart(self):
+        ''' Runs a Quick Start using AdHawk Backend's GUI '''
+
+        # The MindLink's camera will need to be running to detect the marker that the Quick Start procedure will
+        # display. This is why we need to call self._api.start_camera_capture() once the MindLink has connected.
+        self._api.quick_start_gui(mode=MarkerSequenceMode.FIXED_GAZE, marker_size_mm=35,
+                                  callback=(lambda *_args: None))
+        
+        self._allow_output1 = True
+        print("quickstart!")
+        self.calibrate()
+
+
+    def crop():
+        print()
+
 
 def main():
     '''Main function'''
@@ -147,12 +172,12 @@ def main():
         while not frontend.connected:
             pass  # Waits for the frontend to be connected before proceeding
 
-        input('Press Enter to run a Calibration.')
+        input('Press Enter to run a Quick Start and Calibration.')
 
         # Runs a Quick Start at the user's command. This tunes the scan range and frequency to best suit the user's eye
         # and face shape, resulting in better tracking data. For the best quality results in your application, you
         # should also perform a calibration before using gaze data.
-        frontend.calibrate()
+        frontend.quickstart()
 
         while True:
             # Loops while the data streams come in
