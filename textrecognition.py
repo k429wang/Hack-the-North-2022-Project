@@ -7,20 +7,20 @@ import numpy as np
 
 from google.oauth2 import service_account
 
-credentials = service_account.Credentials.from_service_account_file("gcloud/hackthenorth-1663435360245-76d2e298297d.json")
+credentials = service_account.Credentials.from_service_account_file("hackthenorth-1663435360245-76d2e298297d.json")
 
 # MAKE COORDINATES THE INPUT ONES
-coordinates = [[0.2,0.3],[0.7,0.8]]
+# coordinates = [[0.2,0.3],[0.7,0.8]]
 # MAKE FILE_NAME THE INPUT IMAGE LOCATION
-file_name = os.path.abspath('gcloud/images/unknown.png')
+# file_name = os.path.abspath('gcloud/images/unknown.png')
 
-native_language = "en-US"
+# native_language = "en-US"
 
 # file path
-output_path = 'gcloud/output'
+# output_path = 'gcloud/output'
 
 # note: portugues(portugal), english(british) have the same language codes and do not need to be converted
-language_map = {"zh-CN":"zh-Hans", "zh-TW":"zh-Hant", "pt-BR":"pt"}
+# language_map = {"zh-CN":"zh-Hans", "zh-TW":"zh-Hant", "pt-BR":"pt"}
 
 def detect_text(path):
     """Detects text in the file."""
@@ -34,7 +34,10 @@ def detect_text(path):
     response = client.text_detection(image=image)
     texts = response.text_annotations
 
-    text = texts[0]
+    try: 
+        text = texts[0]
+    except:
+        return('No text found, try again')
     return(text.description)
     
     # for text in texts:
@@ -60,7 +63,7 @@ def detect_language(text):
     return(result["language"])
 
 def translate_text(text, language, native):
-    credentials = service_account.Credentials.from_service_account_file("gcloud\hackthenorth-1663435360245-76d2e298297d.json")
+    credentials = service_account.Credentials.from_service_account_file("hackthenorth-1663435360245-76d2e298297d.json")
 
     client = translate.TranslationServiceClient(credentials=credentials)
     location = "global"
@@ -113,10 +116,15 @@ def tts(text, output_path):
         out.write(response.audio_content)
         print('Audio content written to file "output.mp3"')
 
-def crop(img, x1, y1, x2, y2, output_path):
+def crop_image(img, x1, y1, x2, y2):
     img = cv2.imread(img)
-    cropped = img[x1:x2, y1:y2]
-    cv2.imwrite(os.path.join(output_path , 'croppedimage.jpg'), cropped)
+    while True: 
+        if img is None:
+            img = cv2.imread(img)
+        else:
+            break
+    cropped = img[y1:y2, x1:x2]
+    cv2.imwrite(os.path.join('output' , 'croppedimage.jpg'), cropped)
 
 # crop(file_name, int(coordinates[0][0]*1280-50), int(coordinates[0][1]*720)-50, int(coordinates[1][0]*1280+50), int(coordinates[1][1]*720)+50, output_path)
 
