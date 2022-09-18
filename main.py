@@ -1,3 +1,7 @@
+# Hack the North 2022 Project Submission
+# By Kai Wang, Keegan Liu, Joey Wang, and Freeman Huang
+# Attribution: https://github.com/adhawkmicrosystems/python-sdk-examples
+
 import adhawkapi
 import adhawkapi.frontend
 from adhawkapi import MarkerSequenceMode, PacketType, Events
