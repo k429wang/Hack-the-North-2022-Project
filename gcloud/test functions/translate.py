@@ -2,7 +2,7 @@ from google.cloud import translate
 
 from google.oauth2 import service_account
 
-credentials = service_account.Credentials.from_service_account_file("gcloud\hackthenorth-1663435360245-76d2e298297d.json")
+credentials = service_account.Credentials.from_service_account_file("hackthenorth-1663435360245-76d2e298297d.json")
 
 def translate_text(text, language):
 
@@ -22,5 +22,5 @@ def translate_text(text, language):
 
     for translation in response.translations:
         return(translation.translated_text)
-language = "zh-Hans"
-print(translate_text("护卫生创建优美水环境", language))
+language = "th"
+print(translate_text("หัวรับนําดับเพลิง", language))

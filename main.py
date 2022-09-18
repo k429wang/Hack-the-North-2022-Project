@@ -1,6 +1,7 @@
 import adhawkapi
 import adhawkapi.frontend
 from adhawkapi import MarkerSequenceMode, PacketType, Events
+from playsound import playsound
 
 import time, sys, os, threading
 
@@ -33,10 +34,6 @@ class Frontend:
     def __init__(self):
         # Instantiate an API object
         self._api = adhawkapi.frontend.FrontendApi()
-
-        # Tell the api that we wish to tap into the GAZE data stream
-        # with self._handle_gaze_data_stream as the handler
-        # self._api.register_stream_handler(PacketType.GAZE, self._handle_gaze_data_stream)
 
         # Tell the api that we wish to tap into the GAZE IN IMAGE data stream
         # with self._handle_gaze_data_stream as the handler
@@ -108,22 +105,6 @@ class Frontend:
         # Shuts down the api
         self._api.shutdown()
 
-    # def _handle_gaze_data_stream(self, timestamp, x_pos, y_pos, z_pos, vergence):
-    #     ''' Prints gaze data to the console '''
-
-    #     # Only log at most once per second
-    #     if self._last_console_print and timestamp < self._last_console_print + 1:
-    #         return
-
-    #     if self._allow_output0 and self._allow_output1:
-    #         self._last_console_print = timestamp
-    #         print(f'Gaze data\n'
-    #               f'Time since connection:\t{timestamp}\n'
-    #               f'X coordinate:\t\t{x_pos}\n'
-    #               f'Y coordinate:\t\t{y_pos}\n'
-    #               f'Z coordinate:\t\t{z_pos}\n'
-    #               f'Vergence angle:\t\t{vergence}\n')
-
     def _handle_gaze_in_image_stream(self, timestamp, gaze_img_x, gaze_img_y, *_args):
 
         # Updates the gaze marker coordinates with new gaze data. It is possible to receive NaN from the api, so we
@@ -132,15 +113,15 @@ class Frontend:
         self.timestamp = timestamp
 
         # Only log at most once per second
-        if self._last_console_print and timestamp < self._last_console_print + 1:
-            return
+        # if self._last_console_print and timestamp < self._last_console_print + 1:
+        #     return
 
-        if self._allow_output0 and self._allow_output1:
-            self._last_console_print = timestamp
-            print(f'Gaze data\n'
-                  f'Time since connection:\t{timestamp}\n'
-                  f'X coordinate:\t\t{gaze_img_x}\n'
-                  f'Y coordinate:\t\t{gaze_img_y}\n')
+        # if self._allow_output0 and self._allow_output1:
+        #     self._last_console_print = timestamp
+        #     print(f'Gaze data\n'
+        #           f'Time since connection:\t{timestamp}\n'
+        #           f'X coordinate:\t\t{gaze_img_x}\n'
+        #           f'Y coordinate:\t\t{gaze_img_y}\n')
 
     def _handle_event_stream(self, event_type, timestamp, *args):
         ''' Prints event data to the console '''
@@ -163,6 +144,7 @@ class Frontend:
         print(self._gaze_coordinates)
         self.len_changed = True
         if ((len(self.crop_boundaries) == 2) and (self.len_changed == True)):
+            print("2")
             self.crop()
             self.crop_boundaries = []
             self.len_changed = False     
@@ -203,19 +185,20 @@ class Frontend:
             self.connected = True
 
     def _handle_video_stream(self, _gaze_timestamp, _frame_index, image_buf, _frame_timestamp):
-        if self._blink_duration > 0.5 or ((len(self.crop_boundaries) == 1) and (self.len_changed == True)):
-            with open("images\img.jpeg", 'wb') as fh:
+        if (len(self.crop_boundaries) == 1) and (self.len_changed == True):
+            print("1")
+            with open("images\img"+str(self.img_counter)+".jpeg", 'wb') as fh:
                 fh.write(image_buf)
-            self.img_counter += 1
             self.len_changed = False
 
     def calibrate(self):
         ''' Runs a Calibration using AdHawk Backend's GUI '''
 
-        # Two calibration modes are supported: FIXED_HEAD and FIXED_GAZE
+        # Two
+        #  calibration modes are supported: FIXED_HEAD and FIXED_GAZE
         # With fixed head mode you look at calibration markers without moving your head
         # With fixed gaze mode you keep looking at a central point and move your head as instructed during calibration.
-        #self._api.start_calibration_gui(mode=MarkerSequenceMode.FIXED_HEAD, n_points=9, marker_size_mm=35, randomize=False, callback=(lambda *_args: None))
+        self._api.start_calibration_gui(mode=MarkerSequenceMode.FIXED_HEAD, n_points=9, marker_size_mm=35, randomize=False, callback=(lambda *_args: None))
         print("calibrate!")
 
     def quickstart(self):
@@ -223,7 +206,7 @@ class Frontend:
 
         # The MindLink's camera will need to be running to detect the marker that the Quick Start procedure will
         # display. This is why we need to call self._api.start_camera_capture() once the MindLink has connected.
-        # self._api.quick_start_gui(mode=MarkerSequenceMode.FIXED_GAZE, marker_size_mm=35, callback=(lambda *_args: None))
+        self._api.quick_start_gui(mode=MarkerSequenceMode.FIXED_GAZE, marker_size_mm=35, callback=(lambda *_args: None))
         print("quickstart!")
 
     def allow_output(self):
@@ -233,24 +216,29 @@ class Frontend:
     def crop(self):
         print("CROPPED")
         # make sure to add some leeway to each coordinate boundary, in case the coordinates are off or something
-        file_name = os.path.abspath('images/img.jpeg')
+        file_name = f"images/img{self.img_counter}.jpeg"
+        self.img_counter += 1
         # GOOGLE CLOUD STUFF
-        crop_image(file_name, int(self.crop_boundaries[0][0])-150, int(self.crop_boundaries[0][1])-100, int(self.crop_boundaries[1][0])+150, int(self.crop_boundaries[1][1])+100)
+        try:
+            crop_image(file_name, int(self.crop_boundaries[0][0])-200, int(self.crop_boundaries[0][1])-150, int(self.crop_boundaries[1][0])+200, int(self.crop_boundaries[1][1])+150)
+            read_image = detect_text("output/croppedimage.jpg")
+            # read_image = detect_text("images/img.jpeg")
+            read_language = detect_language(read_image)
 
-        read_image = detect_text("output/croppedimage.jpg")
-        # read_image = detect_text("images/img.jpeg")
-        read_language = detect_language(read_image)
+            # check if language is consistent and needs to be remapped
+            if read_language in language_map.keys():
+                read_language = language_map[read_language]
 
-        # check if language is consistent and needs to be remapped
-        if read_language in language_map.keys():
-            read_language = language_map[read_language]
+            translated = translate_text(read_image, read_language, native_language)
 
-        translated = translate_text(read_image, read_language, native_language)
+            print(f"Read text: \n{read_image}")
+            print(f"Language: {read_language}")
+            print(f"Translated text:\n{translated}")
+            tts(translated, output_path)
+            playsound('output/output.mp3')
 
-        print(f"Read text: \n{read_image}")
-        print(f"Language: {read_language}")
-        print(f"Translated text:\n{translated}")
-        tts(translated, output_path)
+        except:
+            playsound('output/bad.mp3')
 
 def main():
     '''Main function'''

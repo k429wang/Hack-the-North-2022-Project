@@ -83,7 +83,10 @@ def translate_text(text, language, native):
     )
 
     for translation in response.translations:
-        return(translation.translated_text)
+        try:
+            return(translation.translated_text)
+        except:
+            return("Invalid language. Try again.")
 
 def tts(text, output_path): 
     client = texttospeech.TextToSpeechClient(credentials=credentials)
@@ -117,14 +120,11 @@ def tts(text, output_path):
         print('Audio content written to file "output.mp3"')
 
 def crop_image(img, x1, y1, x2, y2):
-    img = cv2.imread(img)
-    while True: 
-        if img is None:
-            img = cv2.imread(img)
-        else:
-            break
-    cropped = img[y1:y2, x1:x2]
+    imgfile = cv2.imread(img)
+    cropped = imgfile[y1:y2, x1:x2]
     cv2.imwrite(os.path.join('output' , 'croppedimage.jpg'), cropped)
+
+    
 
 # crop(file_name, int(coordinates[0][0]*1280-50), int(coordinates[0][1]*720)-50, int(coordinates[1][0]*1280+50), int(coordinates[1][1]*720)+50, output_path)
 
