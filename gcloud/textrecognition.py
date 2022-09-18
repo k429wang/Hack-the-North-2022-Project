@@ -118,18 +118,18 @@ def crop(img, x1, y1, x2, y2, output_path):
     cropped = img[x1:x2, y1:y2]
     cv2.imwrite(os.path.join(output_path , 'croppedimage.jpg'), cropped)
 
-crop(file_name, int(coordinates[0][0]*1280-50), int(coordinates[0][1]*720)-50, int(coordinates[1][0]*1280+50), int(coordinates[1][1]*720)+50, output_path)
+# crop(file_name, int(coordinates[0][0]*1280-50), int(coordinates[0][1]*720)-50, int(coordinates[1][0]*1280+50), int(coordinates[1][1]*720)+50, output_path)
 
-read_image = detect_text("gcloud/output/croppedimage.jpg")
-read_language = detect_language(read_image)
+# read_image = detect_text("gcloud/output/croppedimage.jpg")
+# read_language = detect_language(read_image)
 
-# check if language is consistent and needs to be remapped
-if read_language in language_map.keys():
-    read_language = language_map[read_language]
+# # check if language is consistent and needs to be remapped
+# if read_language in language_map.keys():
+#     read_language = language_map[read_language]
 
-translated = translate_text(read_image, read_language, native_language)
+# translated = translate_text(read_image, read_language, native_language)
 
-print(f"Read text: \n{read_image}")
-print(f"Language: {read_language}")
-print(f"Translated text:\n{translated}")
-tts(translated, output_path)
+# print(f"Read text: \n{read_image}")
+# print(f"Language: {read_language}")
+# print(f"Translated text:\n{translated}")
+# tts(translated, output_path)
