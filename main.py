@@ -2,7 +2,7 @@ import adhawkapi
 import adhawkapi.frontend
 from adhawkapi import MarkerSequenceMode, PacketType, Events
 
-import time, sys
+import time, sys, os
 
 class Frontend:
     ''' Frontend communicating with the backend '''
@@ -140,6 +140,7 @@ class Frontend:
             self.crop()
             self.crop_boundaries = []
             self.len_changed = False     
+            os.remove("images\img.jpeg")
 
     def _handle_connect_response(self, error):
         ''' Handler for backend connections '''
@@ -174,7 +175,7 @@ class Frontend:
 
     def _handle_video_stream(self, _gaze_timestamp, _frame_index, image_buf, _frame_timestamp):
         if self._blink_duration > 0.5 or ((len(self.crop_boundaries) == 1) and (self.len_changed == True)):
-            with open("images\img"+str(self.img_counter)+".jpeg", 'wb') as fh:
+            with open("images\img.jpeg", 'wb') as fh:
                 fh.write(image_buf)
             self.img_counter += 1
             self.len_changed = False
