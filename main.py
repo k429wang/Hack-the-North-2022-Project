@@ -54,6 +54,10 @@ class Frontend:
         self.last_blink = 0
         self.crop_boundaries = []
 
+        # Initialize a counter for image file names
+        self.img_counter = 0
+        self.len_changed = False
+
         # Flags the frontend as not connected yet
         self.connected = False
         print('Starting frontend...')
@@ -136,9 +140,11 @@ class Frontend:
         print("DOUBLE BLINK")
         self.last_blink = 0 
         self.crop_boundaries.append(self._gaze_coordinates)
-        if (len(self.crop_boundaries) == 2):
+        self.len_changed = True
+        if ((len(self.crop_boundaries) == 2) and (self.len_changed == True)):
             self.crop()
-            self.crop_boundaries = []     
+            self.crop_boundaries = []
+            self.len_changed = False     
 
     def _handle_connect_response(self, error):
         ''' Handler for backend connections '''
@@ -172,12 +178,11 @@ class Frontend:
             self.connected = True
 
     def _handle_video_stream(self, _gaze_timestamp, _frame_index, image_buf, _frame_timestamp):
-        #print("1")
-        if self._blink_duration > 0.5 or self.crop_boundaries.__len__ == 1:
-            print("3")
-            with open("images\img.jpeg", 'wb') as fh:
-                print("2")
+        if self._blink_duration > 0.5 or ((len(self.crop_boundaries) == 1) and (self.len_changed == True)):
+            with open("images\img"+str(self.img_counter)+".jpeg", 'wb') as fh:
                 fh.write(image_buf)
+            self.img_counter += 1
+            self.len_changed = False
 
     def calibrate(self):
         ''' Runs a Calibration using AdHawk Backend's GUI '''
@@ -185,7 +190,7 @@ class Frontend:
         # Two calibration modes are supported: FIXED_HEAD and FIXED_GAZE
         # With fixed head mode you look at calibration markers without moving your head
         # With fixed gaze mode you keep looking at a central point and move your head as instructed during calibration.
-        self._api.start_calibration_gui(mode=MarkerSequenceMode.FIXED_HEAD, n_points=9, marker_size_mm=35, randomize=False, callback=(lambda *_args: None))
+        # self._api.start_calibration_gui(mode=MarkerSequenceMode.FIXED_HEAD, n_points=9, marker_size_mm=35, randomize=False, callback=(lambda *_args: None))
 
         self._allow_output0 = True
         print("calibrate!")
@@ -196,7 +201,7 @@ class Frontend:
 
         # The MindLink's camera will need to be running to detect the marker that the Quick Start procedure will
         # display. This is why we need to call self._api.start_camera_capture() once the MindLink has connected.
-        self._api.quick_start_gui(mode=MarkerSequenceMode.FIXED_GAZE, marker_size_mm=35, callback=(lambda *_args: None))
+        # self._api.quick_start_gui(mode=MarkerSequenceMode.FIXED_GAZE, marker_size_mm=35, callback=(lambda *_args: None))
         
         self._allow_output1 = True
         print("quickstart!")
