@@ -172,8 +172,8 @@ class Frontend:
             self.connected = True
 
     def _handle_video_stream(self, _gaze_timestamp, _frame_index, image_buf, _frame_timestamp):
-        #print("1")
-        if self._blink_duration > 0.5 or self.crop_boundaries.__len__ == 1:
+        # print("1")
+        if self._blink_duration > 0.5 or len(self.crop_boundaries) == 1:
             print("3")
             with open("images\img.jpeg", 'wb') as fh:
                 print("2")
