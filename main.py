@@ -152,8 +152,6 @@ class Frontend:
             self.crop()
             self.crop_boundaries = []
             self.len_changed = False     
-            #os.remove("images\img.jpeg")
-            #TO RETURN
 
     def _handle_connect_response(self, error):
         ''' Handler for backend connections '''
@@ -171,11 +169,6 @@ class Frontend:
             # SACCADE data streams.
             self._api.set_event_control(adhawkapi.EventControlBit.BLINK, 1, callback=(lambda *_args: None))
             self._api.set_event_control(adhawkapi.EventControlBit.SACCADE, 1, callback=(lambda *_args: None))
-
-            # Starts the MindLink's camera so that a Quick Start can be performed. Note that we use a camera index of 0
-            # here, but your camera index may be different, depending on your setup. On windows, it should be 0.
-            # self._api.start_camera_capture(camera_index=0, resolution_index=adhawkapi.CameraResolution.MEDIUM,
-            #                                correct_distortion=False, callback=(lambda *_args: None))
 
             # Starts the tracker's camera so that video can be captured and sets self._handle_camera_start_response as
             # the callback. This function will be called once the api has finished starting the camera.
