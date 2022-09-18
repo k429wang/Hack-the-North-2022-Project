@@ -15,8 +15,8 @@ def translate_text(text="Hello, world!", project_id="hackthenorth-1663435360245"
             "parent": parent,
             "contents": [text],
             "mime_type": "text/plain",
-            "source_language_code": "en-US",
-            "target_language_code": "zh-Hans",
+            "source_language_code": "zh-Hans",
+            "target_language_code": "en-US",
         }
     )
 
