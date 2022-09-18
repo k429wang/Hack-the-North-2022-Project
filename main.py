@@ -47,11 +47,12 @@ class Frontend:
         self._last_console_print = None
 
         # Initialize the gaze coordinates to dummy values for now
-        self._gaze_coordinates = (0, 0, 0)
+        self._gaze_coordinates = []
 
-        # Initialize blink duration to dummy values for now
+        # Initialize blink duration, last blink timer, and crop boundaries to dummy values for now
         self._blink_duration = 0
         self.last_blink = 0
+        self.crop_boundaries = []
 
         # Flags the frontend as not connected yet
         self.connected = False
@@ -83,27 +84,27 @@ class Frontend:
         # Shuts down the api
         self._api.shutdown()
 
-    def _handle_gaze_data_stream(self, timestamp, x_pos, y_pos, z_pos, vergence):
-        ''' Prints gaze data to the console '''
+    # def _handle_gaze_data_stream(self, timestamp, x_pos, y_pos, z_pos, vergence):
+    #     ''' Prints gaze data to the console '''
 
-        # Only log at most once per second
-        if self._last_console_print and timestamp < self._last_console_print + 1:
-            return
+    #     # Only log at most once per second
+    #     if self._last_console_print and timestamp < self._last_console_print + 1:
+    #         return
 
-        if self._allow_output0 and self._allow_output1:
-            self._last_console_print = timestamp
-            print(f'Gaze data\n'
-                  f'Time since connection:\t{timestamp}\n'
-                  f'X coordinate:\t\t{x_pos}\n'
-                  f'Y coordinate:\t\t{y_pos}\n'
-                  f'Z coordinate:\t\t{z_pos}\n'
-                  f'Vergence angle:\t\t{vergence}\n')
+    #     if self._allow_output0 and self._allow_output1:
+    #         self._last_console_print = timestamp
+    #         print(f'Gaze data\n'
+    #               f'Time since connection:\t{timestamp}\n'
+    #               f'X coordinate:\t\t{x_pos}\n'
+    #               f'Y coordinate:\t\t{y_pos}\n'
+    #               f'Z coordinate:\t\t{z_pos}\n'
+    #               f'Vergence angle:\t\t{vergence}\n')
 
     def _handle_gaze_in_image_stream(self, timestamp, gaze_img_x, gaze_img_y, *_args):
 
         # Updates the gaze marker coordinates with new gaze data. It is possible to receive NaN from the api, so we
         # filter the input accordingly.
-        self._gaze_coordinates = [timestamp, gaze_img_x, gaze_img_y]
+        self._gaze_coordinates = [gaze_img_x, gaze_img_y]
 
         # Only log at most once per second
         if self._last_console_print and timestamp < self._last_console_print + 1:
@@ -111,10 +112,10 @@ class Frontend:
 
         if self._allow_output0 and self._allow_output1:
             self._last_console_print = timestamp
-            print(f'Gaze data\n'
-                  f'Time since connection:\t{timestamp}\n'
-                  f'X coordinate:\t\t{gaze_img_x}\n'
-                  f'Y coordinate:\t\t{gaze_img_y}\n')
+            # print(f'Gaze data\n'
+            #       f'Time since connection:\t{timestamp}\n'
+            #       f'X coordinate:\t\t{gaze_img_x}\n'
+            #       f'Y coordinate:\t\t{gaze_img_y}\n')
 
     def _handle_event_stream(self, event_type, timestamp, *args):
         ''' Prints event data to the console '''
@@ -123,16 +124,21 @@ class Frontend:
             if event_type == Events.BLINK.value: # BLINK EVENT
                 print('Blink!')
                 # Only detect double blink if the second blink happens less than 1 second after previous blink
-                if self.last_blink and timestamp < self.last_blink + 1:
+                if self.last_blink > 0 and timestamp < self.last_blink + 0.75:
                     self.double_blink_handler()
-                self.last_blink = timestamp
+                else:
+                    self.last_blink = timestamp
                 self._blink_duration = args[0]
             elif event_type == Events.SACCADE.value:
                 print('Saccade!')
 
     def double_blink_handler(self):
         print("DOUBLE BLINK")
-        self.last_blink = None 
+        self.last_blink = 0 
+        self.crop_boundaries.append(self._gaze_coordinates)
+        if (len(self.crop_boundaries) == 2):
+            self.crop()
+            self.crop_boundaries = []     
 
     def _handle_connect_response(self, error):
         ''' Handler for backend connections '''
@@ -166,8 +172,11 @@ class Frontend:
             self.connected = True
 
     def _handle_video_stream(self, _gaze_timestamp, _frame_index, image_buf, _frame_timestamp):
-        if self._blink_duration > 0.5:
-            with open("images\img.jpeg", "wb") as fh:
+        #print("1")
+        if self._blink_duration > 0.5 or self.crop_boundaries.__len__ == 1:
+            print("3")
+            with open("images\img.jpeg", 'wb') as fh:
+                print("2")
                 fh.write(image_buf)
 
     def calibrate(self):
@@ -193,8 +202,9 @@ class Frontend:
         print("quickstart!")
 
 
-    def crop():
-        print()
+    def crop(self):
+        print("CROPPED")
+        # make sure to add some leeway to each coordinate boundary, in case the coordinates are off or something
 
 def main():
     '''Main function'''
