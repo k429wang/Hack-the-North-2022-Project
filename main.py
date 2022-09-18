@@ -134,7 +134,6 @@ class Frontend:
         print("DOUBLE BLINK")
         self.last_blink = None 
 
-
     def _handle_connect_response(self, error):
         ''' Handler for backend connections '''
 
