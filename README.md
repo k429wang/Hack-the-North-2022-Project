@@ -1,4 +1,4 @@
-# TraveLens
+# TravelLens
 
 Created by Kai Wang, Keegan Liu, Joey Wang, and Freeman Huang, at Hack the North 2022
 
