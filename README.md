@@ -1,6 +1,6 @@
 # TravelLens
 
-Created by Kai Wang, Keegan Liu, Joey Wang, and Freeman Huang at Hack the North 2022.
+Created by Kai Wang, Keegan Liu, Joey Wang, and Freeman Huang at **Hack the North 2022.**
 
 ## Inspiration
 Have you ever travelled to a country with a language you can't understand? Are you tired of always pulling out your phone to open a translation app? Want a fast and convenient way of translating a foreign language in real time? Then **TraveLens** is the perfect solution for you!
